@@ -137,6 +137,9 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			max = r.ContentLength
 		}
 		if _, err := io.CopyN(dst, r.Body, max); err != nil && err != io.EOF {
+			if err == io.ErrUnexpectedEOF {
+				panic(http.ErrAbortHandler)
+			}
 			logf("buffering.Handler: body copy: %v", err)
 			wErr(w, http.StatusInternalServerError)
 			return
@@ -149,6 +152,9 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	default:
 		if _, err := io.Copy(dst, r.Body); err != nil {
+			if err == io.ErrUnexpectedEOF {
+				panic(http.ErrAbortHandler)
+			}
 			logf("buffering.Handler: body copy: %v", err)
 			wErr(w, http.StatusInternalServerError)
 			return
