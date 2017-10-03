@@ -33,11 +33,11 @@ func WithDir(dir string) Option { return func(h *handler) { h.dir = dir } }
 // using in-memory buffers, chunked payloads fall back to files.
 func WithBufSize(size int) Option { return func(h *handler) { h.bufSize = int64(size) } }
 
-// WithFileLimit limits max files Handler is allowed to keep opened. This may be
-// useful to limit number of file descriptors and OS threads, since file IO in
-// Go consume real threads. Optional wait duration specifies how long request
-// would be waiting in the queue for available slot until giving up. If 0, wait
-// time is not limited (until request is canceled).
+// WithFileLimit limits max number of files Handler is allowed to keep opened.
+// This may be useful to limit number of file descriptors and OS threads, since
+// file IO in Go consume real threads. Optional wait duration specifies how long
+// request would be waiting in the queue for available slot until giving up. If
+// 0, wait time is not limited (until request is canceled).
 func WithFileLimit(maxFiles int, wait time.Duration) Option {
 	return func(h *handler) {
 		if maxFiles < 1 {
