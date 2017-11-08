@@ -48,6 +48,13 @@ func WithFileLimit(maxFiles int, wait time.Duration) Option {
 	}
 }
 
+// WithRequiredContentLength configures Handler to require Content-Length to be
+// explicitly set for POST and PUT requests. POST and PUT requests without
+// Content-Length header will get 411 Length Required response (RFC 7231,
+// 6.5.10). This allows Handler to always use in-memory buffers when their size
+// is sufficient.
+func WithRequiredContentLength() Option { return func(h *handler) { h.requireLength = true } }
+
 // Handler returns http.Handler wrapping original one; this handler first reads
 // request body storing it to in-memory buffer or temporary file, then calls
 // original handler to process request body directly from buffer or file.
@@ -74,6 +81,8 @@ type handler struct {
 	maxSize int64  // max allowed body size, unlimited if zero
 	bufSize int64  // use buffers for payloads not exceeding this size
 
+	requireLength bool // whether Content-Length on POST/PUT requests is mandatory
+
 	gate chan struct{} // limit concurrent usage of open files
 	wait time.Duration // queue wait time
 }
@@ -92,6 +101,10 @@ func logFunc(r *http.Request) func(format string, v ...interface{}) {
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.ContentLength == 0 {
 		h.Handler.ServeHTTP(w, r)
+		return
+	}
+	if h.requireLength && r.ContentLength == -1 && (r.Method == http.MethodPost || r.Method == http.MethodPut) {
+		wErr(w, http.StatusLengthRequired)
 		return
 	}
 	if h.maxSize > 0 && r.ContentLength > h.maxSize {
