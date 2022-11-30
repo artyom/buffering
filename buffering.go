@@ -10,7 +10,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -87,9 +86,9 @@ type handler struct {
 	wait time.Duration // queue wait time
 }
 
-func logFunc(r *http.Request) func(format string, v ...interface{}) {
+func logFunc(r *http.Request) func(format string, v ...any) {
 	if r == nil {
-		return func(string, ...interface{}) {}
+		return func(string, ...any) {}
 	}
 	srv, ok := r.Context().Value(http.ServerContextKey).(*http.Server)
 	if ok && srv.ErrorLog != nil {
@@ -117,7 +116,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case h.bufSize > 0 && r.ContentLength > 0 && r.ContentLength <= h.bufSize:
 		buf := bytes.NewBuffer(make([]byte, 0, int(r.ContentLength)))
-		body, dst = ioutil.NopCloser(buf), buf
+		body, dst = io.NopCloser(buf), buf
 	default:
 		if h.gate != nil {
 			ctx := r.Context()
@@ -134,7 +133,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		f, err := ioutil.TempFile(h.dir, ".request-")
+		f, err := os.CreateTemp(h.dir, ".request-")
 		if err != nil {
 			logf("buffering.Handler: temp file create: %v", err)
 			wErr(w, http.StatusInternalServerError)
@@ -159,7 +158,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		// if read past body end succeeds, then it's not completely
 		// consumed and client is over limit
-		if n, err := io.CopyN(ioutil.Discard, r.Body, 32); err != io.EOF || n > 0 {
+		if n, err := io.CopyN(io.Discard, r.Body, 32); err != io.EOF || n > 0 {
 			wErr(w, http.StatusRequestEntityTooLarge)
 			return
 		}

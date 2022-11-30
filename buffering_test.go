@@ -1,7 +1,7 @@
 package buffering
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -19,7 +19,7 @@ func TestHandler(t *testing.T) {
 		default:
 			t.Logf("r.Body is not an *os.File: %#v", r.Body)
 		}
-		buf, err := ioutil.ReadAll(r.Body)
+		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			t.Fatalf("reading r.Body: %v", err)
 		}
