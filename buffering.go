@@ -66,6 +66,11 @@ func Handler(h http.Handler, opts ...Option) http.Handler {
 	for _, opt := range opts {
 		opt(bh)
 	}
+	td := bh.dir
+	if td == "" {
+		td = os.TempDir()
+	}
+	_ = os.MkdirAll(td, 0o777)
 	return bh
 }
 
