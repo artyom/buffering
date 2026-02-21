@@ -28,7 +28,7 @@ func WithMaxSize(size int64) Option { return func(h *handler) { h.maxSize = size
 // It doesn't check whether directory is accessible.
 func WithDir(dir string) Option { return func(h *handler) { h.dir = dir } }
 
-// WithBufSize configures Handler to user in-memory buffers for payloads which
+// WithBufSize configures Handler to use in-memory buffers for payloads which
 // do not exceed given size. Only bodies with Content-Length header are handled
 // using in-memory buffers, chunked payloads fall back to files.
 func WithBufSize(size int) Option { return func(h *handler) { h.bufSize = int64(size) } }
