@@ -1,1 +1,1 @@
-See https://godoc.org/github.com/artyom/buffering for details
+See https://pkg.go.dev/github.com/artyom/buffering for details
