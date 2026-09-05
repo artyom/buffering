@@ -48,10 +48,10 @@ func WithFileLimit(maxFiles int, wait time.Duration) Option {
 	}
 }
 
-// WithRequiredContentLength configures Handler to require Content-Length to be
-// explicitly set for POST and PUT requests. POST and PUT requests without
-// Content-Length header will get 411 Length Required response (RFC 7231,
-// 6.5.10). This allows Handler to always use in-memory buffers when their size
+// WithRequiredContentLength configures Handler to reject POST and PUT requests
+// whose body length is unknown. Requests using chunked transfer encoding
+// receive a 411 Length Required response (RFC 7231, 6.5.10).
+// This allows Handler to always use in-memory buffers when their size
 // is sufficient.
 func WithRequiredContentLength() Option { return func(h *handler) { h.requireLength = true } }
 
@@ -100,12 +100,12 @@ func logFunc(r *http.Request) func(format string, v ...any) {
 }
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.ContentLength == 0 {
-		h.Handler.ServeHTTP(w, r)
-		return
-	}
 	if h.requireLength && r.ContentLength == -1 && (r.Method == http.MethodPost || r.Method == http.MethodPut) {
 		wErr(w, http.StatusLengthRequired)
+		return
+	}
+	if r.ContentLength == 0 {
+		h.Handler.ServeHTTP(w, r)
 		return
 	}
 	if h.maxSize > 0 && r.ContentLength > h.maxSize {
