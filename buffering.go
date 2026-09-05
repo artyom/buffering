@@ -141,7 +141,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			wErr(w, http.StatusInternalServerError)
 			return
 		}
-		defer f.Close()
+		defer func() { f.Close(); os.Remove(f.Name()) }()
 		_ = os.Remove(f.Name())
 		body, dst = f, f
 	}
