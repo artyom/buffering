@@ -181,10 +181,9 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	r2 := new(http.Request)
-	*r2 = *r
-	r2.Body = body
-	h.Handler.ServeHTTP(w, r2)
+	clone := *r
+	clone.Body = body
+	h.Handler.ServeHTTP(w, &clone)
 }
 
 func wErr(w http.ResponseWriter, code int) { http.Error(w, http.StatusText(code), code) }
